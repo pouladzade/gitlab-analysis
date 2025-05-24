@@ -1,4 +1,5 @@
-# GitLab Analysis ToolA comprehensive Python tool for analyzing GitLab repositories and exporting issues in various formats. This tool provides detailed commit analysis, author statistics, and flexible issue export capabilities.**Repository:** [https://github.com/pouladzade/gitlab-analysis](https://github.com/pouladzade/gitlab-analysis)
+## GitLab Analysis Tool
+A comprehensive Python tool for analyzing GitLab repositories and exporting issues in various formats. This tool provides detailed commit analysis, author statistics, and flexible issue export capabilities.**Repository:** [https://github.com/pouladzade/gitlab-analysis](https://github.com/pouladzade/gitlab-analysis)
 
 ## Features
 
@@ -144,7 +145,8 @@ All outputs are organized in timestamped folders under `gitlab_reports/`:
 - `all_issues_jira_import_YYYYMMDD_HHMMSS.csv` - Consolidated Jira import
 - `jira_import_summary_YYYYMMDD_HHMMSS.txt` - Import instructions
 
-## Configuration### Quick Setup1. **Copy configuration template:** `bash   cp config/env.template .env   `2. **Edit `.env` file with your settings:** `env   # GitLab instance URL   GITLAB_URL=https://gitlab.ptc-telematik.de      # Personal Access Token (required)   GITLAB_TOKEN=your_token_here   `3. **Verify configuration:** `bash   python config/settings.py   `### Advanced ConfigurationThe configuration system supports many optional settings. See `config/README.md` for complete documentation.**Key optional settings:**- `DEFAULT_ANALYSIS_DAYS` - Default analysis period- `DEFAULT_AUTHORS` - Default author filter- `EXCLUDE_REPOSITORIES` - Repositories to skip- `CODE_FILE_EXTENSIONS` - File types to analyze
+## Configuration:
+Quick Setup1. **Copy configuration template:** `bash   cp config/env.template .env   `2. **Edit `.env` file with your settings:** `env   # GitLab instance URL   GITLAB_URL=https://gitlab.ptc-telematik.de      # Personal Access Token (required)   GITLAB_TOKEN=your_token_here   `3. **Verify configuration:** `bash   python config/settings.py   `### Advanced ConfigurationThe configuration system supports many optional settings. See `config/README.md` for complete documentation.**Key optional settings:**- `DEFAULT_ANALYSIS_DAYS` - Default analysis period- `DEFAULT_AUTHORS` - Default author filter- `EXCLUDE_REPOSITORIES` - Repositories to skip- `CODE_FILE_EXTENSIONS` - File types to analyze
 
 ### Command Line Options
 
