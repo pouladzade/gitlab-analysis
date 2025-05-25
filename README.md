@@ -1,4 +1,5 @@
 ## GitLab Analysis Tool
+
 A comprehensive Python tool for analyzing GitLab repositories and exporting issues in various formats. This tool provides detailed commit analysis, author statistics, and flexible issue export capabilities.**Repository:** [https://github.com/pouladzade/gitlab-analysis](https://github.com/pouladzade/gitlab-analysis)
 
 ## Features
@@ -146,6 +147,7 @@ All outputs are organized in timestamped folders under `gitlab_reports/`:
 - `jira_import_summary_YYYYMMDD_HHMMSS.txt` - Import instructions
 
 ## Configuration:
+
 Quick Setup1. **Copy configuration template:** `bash   cp config/env.template .env   `2. **Edit `.env` file with your settings:** `env   # GitLab instance URL   GITLAB_URL=https://gitlab.ptc-telematik.de      # Personal Access Token (required)   GITLAB_TOKEN=your_token_here   `3. **Verify configuration:** `bash   python config/settings.py   `### Advanced ConfigurationThe configuration system supports many optional settings. See `config/README.md` for complete documentation.**Key optional settings:**- `DEFAULT_ANALYSIS_DAYS` - Default analysis period- `DEFAULT_AUTHORS` - Default author filter- `EXCLUDE_REPOSITORIES` - Repositories to skip- `CODE_FILE_EXTENSIONS` - File types to analyze
 
 ### Command Line Options
@@ -163,6 +165,11 @@ Quick Setup1. **Copy configuration template:** `bash   cp config/env.template .e
 - **Activity Patterns**: Identifies peak development periods
 - **Commit Frequency**: Tracks commits per day/week/month
 - **File Change Analysis**: Most modified files and directories
+- **Offline Mode**: Enhanced support for analyzing local repositories
+  - Automatically detects and tracks active repositories
+  - Provides accurate repository inclusion summary
+  - Supports local file URLs for repository references
+  - Maintains consistent reporting between online and offline modes
 
 ### Issue Export Features
 
@@ -237,3 +244,115 @@ For issues and questions:1. Check the troubleshooting section above2. Search exi
 ---
 
 **Happy Analyzing! 🚀**
+
+# Enhanced Local Git Repository Analyzer
+
+This tool analyzes your GitLab repositories for activity and author statistics, consolidating by email and supporting robust branch and date detection.
+
+## Features
+
+- Fetches all accessible GitLab repositories (not just those you are a member of)
+- Detects activity on **all branches** (not just default)
+- Supports SSH cloning (with custom port)
+- Generates detailed reports (text and CSV) with:
+  - Active/inactive repository summary
+  - Author commit/line stats (when run in full mode)
+- Supports `--list-only` mode for fast activity checks
+- Handles merge commit exclusion, author consolidation, and more
+
+## Setup
+
+### 1. Environment Variables (.env)
+
+Create a `.env` file in your project root with:
+
+```
+GITLAB_TOKEN=your_gitlab_token_here
+GITLAB_URL=https://gitlab.ptc-telematik.de
+```
+
+- Your token must have `read_api` and `read_repository` scopes.
+
+### 2. SSH Key Setup
+
+- Add your public SSH key (e.g., `id_ed25519.pub`) to your GitLab account.
+- Ensure your private key is loaded in your SSH agent:
+  ```bash
+  ssh-add ~/.ssh/id_ed25519
+  ```
+- Test with:
+  ```bash
+  ssh -T git@gitlab.ptc-telematik.de -p 7999
+  ```
+
+### 3. Install Requirements
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+### List Only (no cloning, just activity summary)
+
+```bash
+python scripts/analyze_local_repo_enhanced.py --list-only --since 2024-04-25 --until 2024-05-25
+```
+
+### Full Online Analysis (fetch, clone/update, analyze)
+
+```bash
+python scripts/analyze_local_repo_enhanced.py --mode online --since 2024-04-25 --until 2024-05-25
+```
+
+### Offline Analysis (analyze already-cloned repos)
+
+```bash
+python scripts/analyze_local_repo_enhanced.py --mode offline --since 2024-04-25 --until 2024-05-25
+```
+
+### Verbose Output
+
+Add `--verbose` to see detailed inclusion/skipping info for each repo.
+
+## Report Interpretation
+
+- **Active repositories (included):** Repos with at least one commit in the period (on any branch)
+- **Non-active repositories (skipped):** No commits in the period
+- **SUMMARY STATISTICS:** Author/commit/line stats (only in full analysis mode)
+
+## Troubleshooting
+
+- **No repositories found:**
+  - Check your token and permissions
+  - Increase `--max-repos` if you have many projects
+- **No commits detected for a repo:**
+  - Ensure the commit is pushed and visible via the API
+  - Check the date range and timezone
+  - Some GitLab API versions may have bugs with commit listing; try updating GitLab or using local analysis
+- **No author stats:**
+  - Make sure you run in full analysis mode (not `--list-only`)
+  - Ensure repos are cloned and up to date
+
+## Example .env
+
+```
+GITLAB_TOKEN=glpat-xxxxxxxxxxxxxxxxxxxx
+GITLAB_URL=https://gitlab.ptc-telematik.de
+```
+
+## Example SSH Test
+
+```
+ssh -T git@gitlab.ptc-telematik.de -p 7999
+```
+
+## Need Help?
+
+- If you encounter issues with API access, check your token scopes and project visibility.
+- For further debugging, use `--verbose` and review the printed API calls and results.
+- If you need to analyze all branches for activity, the script already does this by default.
+
+---
+
+**For more advanced usage or troubleshooting, see the comments in the script or contact your GitLab admin.**
