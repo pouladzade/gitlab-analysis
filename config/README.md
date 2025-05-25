@@ -63,9 +63,8 @@ EXCLUDE_REPOSITORIES=archived-repo,test-repo
 # File type filtering
 CODE_FILE_EXTENSIONS=.py,.js,.java,.cpp,.c,.h,.cs,.php,.rb,.go,.ts
 
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=gitlab_analysis.log
+# Analysis mode
+ANALYSIS_MODE=offline  # Set to 'offline' for local repository analysis only
 ```
 
 ## Usage
@@ -94,18 +93,17 @@ print(f"Default analysis days: {config.default_analysis_days}")
 
 ## Configuration Options
 
-| Variable                | Description                  | Default                           | Required |
-| ----------------------- | ---------------------------- | --------------------------------- | -------- |
-| `GITLAB_URL`            | GitLab instance URL          | `https://gitlab.ptc-telematik.de` | ✓        |
-| `GITLAB_TOKEN`          | Personal access token        | -                                 | ✓        |
-| `DEFAULT_ANALYSIS_DAYS` | Default days for analysis    | `60`                              | ✗        |
-| `REPORTS_DIRECTORY`     | Output directory for reports | `gitlab_reports`                  | ✗        |
-| `PROJECTS_DIRECTORY`    | Directory with cloned repos  | `projects`                        | ✗        |
-| `CODE_FILE_EXTENSIONS`  | File types to analyze        | See template                      | ✗        |
-| `DEFAULT_AUTHORS`       | Default author filter        | -                                 | ✗        |
-| `EXCLUDE_REPOSITORIES`  | Repos to skip                | -                                 | ✗        |
-| `LOG_LEVEL`             | Logging level                | `INFO`                            | ✗        |
-| `LOG_FILE`              | Log file path                | `gitlab_analysis.log`             | ✗        |
+| Variable                | Description                    | Default                           | Required |
+| ----------------------- | ------------------------------ | --------------------------------- | -------- |
+| `GITLAB_URL`            | GitLab instance URL            | `https://gitlab.ptc-telematik.de` | ✓        |
+| `GITLAB_TOKEN`          | Personal access token          | -                                 | ✓        |
+| `DEFAULT_ANALYSIS_DAYS` | Default days for analysis      | `60`                              | ✗        |
+| `REPORTS_DIRECTORY`     | Output directory for reports   | `gitlab_reports`                  | ✗        |
+| `PROJECTS_DIRECTORY`    | Directory with cloned repos    | `projects`                        | ✗        |
+| `CODE_FILE_EXTENSIONS`  | File types to analyze          | See template                      | ✗        |
+| `DEFAULT_AUTHORS`       | Default author filter          | -                                 | ✗        |
+| `EXCLUDE_REPOSITORIES`  | Repos to skip                  | -                                 | ✗        |
+| `ANALYSIS_MODE`         | Analysis mode (online/offline) | `online`                          | ✗        |
 
 ## Security Notes
 
