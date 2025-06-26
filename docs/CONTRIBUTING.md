@@ -17,7 +17,6 @@ Please familiarize yourself with the project structure:
 - `src/` - Shared utilities and common functionality
 - `config/` - Configuration files and examples
 - `docs/` - Documentation files
-- `archive/` - Legacy scripts (do not modify)
 
 ## 🔧 Development Guidelines
 

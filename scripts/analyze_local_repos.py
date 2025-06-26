@@ -146,7 +146,7 @@ class LocalGitAnalyzer:
             os.makedirs(os.path.dirname(repo_path), exist_ok=True)
             
             # Convert ssh_url_to_repo to custom format
-            # Example: git@gitlab.ptc-telematik.de:customerportal/admin-app.git -> ssh://{user_host}:7999/{path}
+            # Example: git@gitlab.example.com:group/project.git -> ssh://{user_host}:7999/{path}
             original_ssh_url = project['ssh_url_to_repo']
             if original_ssh_url.startswith('git@'):
                 user_host, path = original_ssh_url.split(':', 1)

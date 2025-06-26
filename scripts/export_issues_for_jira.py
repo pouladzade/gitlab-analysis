@@ -3,6 +3,7 @@
 import os
 import csv
 import gitlab
+import argparse
 from datetime import datetime, timedelta
 from typing import Dict, List
 from dotenv import load_dotenv
@@ -10,13 +11,77 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Export GitLab issues to Jira-compatible CSV format')
+    
+    parser.add_argument(
+        '--days', 
+        type=int, 
+        default=60,
+        help='Number of days to look back for issues (default: 60)'
+    )
+    
+    parser.add_argument(
+        '--output-dir',
+        type=str,
+        help='Custom output directory (default: gitlab_reports/jira_TIMESTAMP)'
+    )
+    
+    parser.add_argument(
+        '--gitlab-url',
+        type=str,
+        help='GitLab instance URL (default: from GITLAB_URL env var)'
+    )
+    
+    parser.add_argument(
+        '--gitlab-token',
+        type=str,
+        help='GitLab private token (default: from GITLAB_TOKEN env var)'
+    )
+    
+    parser.add_argument(
+        '--projects',
+        type=str,
+        nargs='+',
+        help='Specific GitLab projects to export (default: all accessible projects)'
+    )
+    
+    parser.add_argument(
+        '--skip-consolidated',
+        action='store_true',
+        help='Skip creating consolidated CSV file'
+    )
+    
+    parser.add_argument(
+        '--skip-summary',
+        action='store_true',
+        help='Skip creating summary file'
+    )
+    
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable verbose output'
+    )
+    
+    parser.add_argument(
+        '--state',
+        type=str,
+        choices=['all', 'opened', 'closed'],
+        default='all',
+        help="Which issues to export: 'all' (default), 'opened', or 'closed'"
+    )
+    
+    return parser.parse_args()
+
 class GitLabToJiraExporter:
-    def __init__(self, gitlab_url: str = None, private_token: str = None):
+    def __init__(self, gitlab_url: str = None, private_token: str = None, output_dir: str = None, verbose: bool = False):
         self.gitlab_url = gitlab_url or os.getenv('GITLAB_URL', 'https://gitlab.example.com')
         self.private_token = private_token or os.getenv('GITLAB_TOKEN')
+        self.verbose = verbose
         
         if not self.private_token:
-            raise ValueError("GitLab private token not found. Set GITLAB_TOKEN environment variable.")
+            raise ValueError("GitLab private token not found. Set GITLAB_TOKEN environment variable or use --gitlab-token option.")
         
         # Initialize GitLab connection
         self.gl = gitlab.Gitlab(self.gitlab_url, private_token=self.private_token)
@@ -24,12 +89,17 @@ class GitLabToJiraExporter:
         
         # Create timestamped output directory for this export run
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        main_dir = os.path.join(os.getcwd(), 'gitlab_reports')
-        self.issues_dir = os.path.join(main_dir, f'jira_{timestamp}')
+        if output_dir:
+            self.issues_dir = output_dir
+        else:
+            main_dir = os.path.join(os.getcwd(), 'gitlab_reports')
+            self.issues_dir = os.path.join(main_dir, f'jira_{timestamp}')
+        
         os.makedirs(self.issues_dir, exist_ok=True)
         
-        print(f"Successfully connected to GitLab instance: {self.gitlab_url}")
-        print(f"Export directory: {self.issues_dir}")
+        if self.verbose:
+            print(f"Successfully connected to GitLab instance: {self.gitlab_url}")
+            print(f"Export directory: {self.issues_dir}")
 
     def map_status_to_jira(self, gitlab_state: str, labels: List[str] = None) -> str:
         """Map GitLab issue state and labels to Jira status."""
@@ -106,21 +176,22 @@ class GitLabToJiraExporter:
         else:
             return name
 
-    def get_recent_open_issues(self, project, days_back: int = 60) -> List[Dict]:
-        """Fetch recent open issues from a GitLab project and convert to Jira format."""
+    def get_recent_issues(self, project, days_back: int = 60, state: str = 'all') -> List[Dict]:
+        """Fetch recent issues from a GitLab project and convert to Jira format."""
         cutoff_date = datetime.now() - timedelta(days=days_back)
         cutoff_date_str = cutoff_date.strftime('%Y-%m-%d')
         
         try:
-            # Get all open issues
-            issues = project.issues.list(state='opened', all=True)
+            # Get issues based on state
+            if state == 'all':
+                issues = project.issues.list(all=True)
+            else:
+                issues = project.issues.list(state=state, all=True)
             
             jira_issues = []
             for issue in issues:
-                # Simple date string comparison to avoid timezone issues
-                created_date = issue.created_at[:10]  # Extract YYYY-MM-DD
-                updated_date = issue.updated_at[:10]  # Extract YYYY-MM-DD
-                
+                created_date = issue.created_at[:10]
+                updated_date = issue.updated_at[:10]
                 if created_date >= cutoff_date_str or updated_date >= cutoff_date_str:
                     labels = issue.labels if hasattr(issue, 'labels') and issue.labels else []
                     
@@ -195,6 +266,32 @@ class GitLabToJiraExporter:
                         else:
                             reporter = issue.author['username']
                     
+                    # Format Created and Updated fields for Jira compatibility
+                    def format_jira_datetime(dt_str):
+                        try:
+                            # Try parsing ISO 8601 with or without milliseconds and Z
+                            dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+                            return dt.strftime('%Y-%m-%d %H:%M:%S')
+                        except Exception:
+                            try:
+                                # Fallback: try parsing without timezone
+                                dt = datetime.strptime(dt_str[:19], '%Y-%m-%dT%H:%M:%S')
+                                return dt.strftime('%Y-%m-%d %H:%M:%S')
+                            except Exception:
+                                print(f"Warning: Could not parse date '{dt_str}' for Jira export.")
+                                return dt_str  # fallback to original
+
+                    # Format Due Date for Jira compatibility
+                    def format_jira_date(dt_str):
+                        if not dt_str:
+                            return ''
+                        try:
+                            dt = datetime.strptime(dt_str, '%Y-%m-%d')
+                            return dt.strftime('%Y-%m-%d')
+                        except Exception:
+                            print(f"Warning: Could not parse due date '{dt_str}' for Jira export.")
+                            return dt_str  # fallback to original
+
                     jira_issue = {
                         'Issue Type': self.map_issue_type(labels, issue.title),
                         'Summary': issue.title,
@@ -207,9 +304,9 @@ class GitLabToJiraExporter:
                         'Components': self.extract_components(labels, project.name),
                         'Fix Version': issue.milestone['title'] if issue.milestone else '',
                         'Story Points': getattr(issue, 'weight', ''),
-                        'Due Date': getattr(issue, 'due_date', ''),
-                        'Created': issue.created_at,
-                        'Updated': issue.updated_at,
+                        'Due Date': format_jira_date(getattr(issue, 'due_date', '')),
+                        'Created': format_jira_datetime(issue.created_at),
+                        'Updated': format_jira_datetime(issue.updated_at),
                         'External ID': f"gitlab-{issue.id}",
                         'Original URL': issue.web_url,
                         'Repository': project.name,
@@ -225,11 +322,11 @@ class GitLabToJiraExporter:
             print(f"Error fetching issues for project {project.name}: {str(e)}")
             return []
 
-    def export_project_issues_jira(self, project, days_back: int = 60) -> str:
+    def export_project_issues_jira(self, project, days_back: int = 60, state: str = 'all') -> str:
         """Export issues for a single project to a Jira-compatible CSV file."""
         print(f"Fetching recent issues for: {project.name}")
         
-        issues = self.get_recent_open_issues(project, days_back)
+        issues = self.get_recent_issues(project, days_back, state)
         
         if not issues:
             print(f"  No recent issues found for {project.name}")
@@ -258,7 +355,7 @@ class GitLabToJiraExporter:
         print(f"  Exported {len(issues)} issues to: {filename}")
         return filepath
 
-    def export_all_repositories_jira(self, days_back: int = 60) -> List[str]:
+    def export_all_repositories_jira(self, days_back: int = 60, state: str = 'all') -> List[str]:
         """Export issues from all locally cloned repositories as Jira-compatible CSV files."""
         print(f"Scanning local repositories and fetching their recent issues for Jira import...")
         
@@ -276,51 +373,40 @@ class GitLabToJiraExporter:
                 try:
                     import git
                     repo = git.Repo(root)
-                    
                     if 'origin' in repo.remotes:
                         remote_url = repo.remotes.origin.url
-                        
                         if 'gitlab' in remote_url:
                             if remote_url.startswith('git@'):
                                 project_path = remote_url.split(':')[1].replace('.git', '')
                             else:
                                 project_path = '/'.join(remote_url.split('/')[-2:]).replace('.git', '')
-                            
                             if project_path in processed_projects:
                                 continue
-                                
                             processed_projects.add(project_path)
-                            
                             try:
                                 project = self.gl.projects.get(project_path)
                                 print(f"Found GitLab project: {project_path}")
-                                
                                 # Get issues for this project
-                                issues = self.get_recent_open_issues(project, days_back)
+                                issues = self.get_recent_issues(project, days_back, state)
                                 if issues:
                                     # Export individual CSV file
-                                    filepath = self.export_project_issues_jira(project, days_back)
+                                    filepath = self.export_project_issues_jira(project, days_back, state)
                                     if filepath:
                                         exported_files.append(filepath)
-                                    
                                     # Add to consolidated list
                                     all_issues.extend(issues)
-                                    
                             except gitlab.exceptions.GitlabGetError:
                                 print(f"Could not access GitLab project: {project_path}")
                                 continue
                             except Exception as e:
                                 print(f"Error processing GitLab project {project_path}: {str(e)}")
                                 continue
-                                
                 except Exception as e:
                     print(f"Error processing local repository {root}: {str(e)}")
                     continue
-        
         # Create consolidated Jira import CSV file
         if all_issues:
             self.create_consolidated_jira_csv(all_issues, days_back)
-                    
         return exported_files
 
     def create_consolidated_jira_csv(self, all_issues: List[Dict], days_back: int):
@@ -422,25 +508,53 @@ class GitLabToJiraExporter:
         print(f"Summary file created: {os.path.basename(summary_file)}")
         print(f"Total exported Jira CSV files: {len(exported_files)}")
 
-def parse_args():
-    import argparse
-    parser = argparse.ArgumentParser(description='Export GitLab issues to Jira-compatible CSV format with user context')
-    parser.add_argument('--days', type=int, default=60, help='Number of days back to look for recent issues (default: 60)')
-    return parser.parse_args()
-
 def main():
-    print("GitLab to Jira Issues CSV Exporter (with User Context)")
-    print("=" * 55)
-    
-    args = parse_args()
+    args = parse_arguments()
     
     try:
-        exporter = GitLabToJiraExporter()
-        exported_files = exporter.export_all_repositories_jira(args.days)
-        exporter.create_summary_file(exported_files, args.days)
+        exporter = GitLabToJiraExporter(
+            gitlab_url=args.gitlab_url,
+            private_token=args.gitlab_token,
+            output_dir=args.output_dir,
+            verbose=args.verbose
+        )
         
-        print(f"\nJira-compatible CSV files exported to: {exporter.issues_dir}")
-        print("Ready for Jira import! Issues include full user context in descriptions.")
+        if args.projects:
+            # Export specific projects
+            exported_files = []
+            for project_path in args.projects:
+                try:
+                    project = exporter.gl.projects.get(project_path)
+                    if args.verbose:
+                        print(f"Processing project: {project_path}")
+                    filepath = exporter.export_project_issues_jira(project, args.days, args.state)
+                    if filepath:
+                        exported_files.append(filepath)
+                except gitlab.exceptions.GitlabGetError:
+                    print(f"Error: Could not access GitLab project: {project_path}")
+                except Exception as e:
+                    print(f"Error processing project {project_path}: {str(e)}")
+        else:
+            # Export all repositories
+            exported_files = exporter.export_all_repositories_jira(args.days, args.state)
+        
+        # Create consolidated CSV if not skipped
+        if not args.skip_consolidated and exported_files:
+            all_issues = []
+            for filepath in exported_files:
+                with open(filepath, 'r', encoding='utf-8') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    all_issues.extend(list(reader))
+            exporter.create_consolidated_jira_csv(all_issues, args.days)
+        
+        # Create summary file if not skipped
+        if not args.skip_summary:
+            exporter.create_summary_file(exported_files, args.days)
+        
+        if args.verbose:
+            print("\nExport completed successfully!")
+            print(f"Total exported files: {len(exported_files)}")
+            print(f"Export directory: {exporter.issues_dir}")
         
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -448,5 +562,5 @@ def main():
     
     return 0
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     exit(main()) 
