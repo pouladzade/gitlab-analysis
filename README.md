@@ -1,358 +1,319 @@
-## GitLab Analysis Tool
+# GitLab Analysis Tool
 
-A comprehensive Python tool for analyzing GitLab repositories and exporting issues in various formats. This tool provides detailed commit analysis, author statistics, and flexible issue export capabilities.**Repository:** [https://github.com/pouladzade/gitlab-analysis](https://github.com/pouladzade/gitlab-analysis)
+A comprehensive Python toolkit for analyzing GitLab repositories, exporting issues, and managing package registries. This tool provides detailed commit analysis, flexible issue export capabilities, and comprehensive package registry management.
 
-## Features
+## 🚀 Features
 
-### Repository Analysis
+### 📊 Repository Analysis
+- **Comprehensive Commit Analysis**: Activity patterns, author statistics, and timeline analysis
+- **Email Consolidation**: Automatic grouping of commits by author email
+- **Branch-Aware**: Analyzes all branches, not just the default branch
+- **Offline Mode**: Enhanced support for analyzing local repositories
+- **Merge Commit Filtering**: Excludes merge commits for accurate statistics
 
-- **Commit Analysis**: Detailed commit frequency and activity patterns
-- **Author Statistics**: Email consolidation and contributor insights
-- **Activity Metrics**: Timeline analysis and productivity metrics
-- **Comprehensive Reports**: Both text and CSV output formats
+### 📋 Issue Export & Management
+- **Multiple Export Formats**: Markdown, CSV, and Jira-compatible formats
+- **Smart Filtering**: Export issues by date range and activity
+- **User Context Preservation**: Maintains author and assignee information
+- **Jira Integration**: Pre-formatted CSV files ready for Jira import
+- **Consolidated Reports**: Combine issues from multiple projects
 
-### Issue Export
+### 📦 Package Registry Analysis
+- **Multi-Registry Support**: NPM, Maven, Helm, PyPI, NuGet, Docker, and more
+- **Direct Package Links**: URLs to view package code and files
+- **Comprehensive Metadata**: Package sizes, file counts, creation dates
+- **Advanced Filtering**: By package type, search terms, and project scope
+- **Multiple Output Formats**: Table, JSON, CSV, and summary views
 
-- **Markdown Export**: Human-readable issue reports with full context
-- **CSV Export**: Structured data for spreadsheet analysis
-- **Jira Import**: Pre-formatted CSV files ready for Jira import with user context
+### 🔧 Utility Tools
+- **Project Access Verification**: Check GitLab permissions and connectivity
+- **Environment Configuration**: Streamlined setup and troubleshooting
+- **Debug Support**: Comprehensive logging and error handling
 
-## Project Structure
+## 📁 Project Structure
 
-```gitlab-analysis/
-├── scripts/                              # Main executable scripts│   ├── analyze_local_repos.py            # Repository analysis│   ├── export_recent_issues.py           # Markdown issue export│   ├── export_recent_issues_csv.py       # CSV issue export│   └── export_issues_for_jira.py         # Jira import format
-├── src/                                  # Shared utilities
-│   ├── __init__.py                       # Package initialization
-│   └── gitlab_utils.py                   # Common GitLab utilities
-├── config/                               # Configuration files
-├── docs/                                 # Documentation
-├── archive/                              # Legacy scripts
-├── gitlab_reports/                       # Generated reports (timestamped folders)
-│   ├── analysis_YYYYMMDD_HHMMSS/        # Analysis outputs
-│   ├── issues_export_YYYYMMDD_HHMMSS/   # Markdown exports
-│   ├── issues_csv_YYYYMMDD_HHMMSS/      # CSV exports
-│   └── jira_YYYYMMDD_HHMMSS/            # Jira import files
-├── projects/                             # Cloned GitLab repositories
-├── gitlab_analysis.py                    # Main entry point
-├── requirements.txt                      # Python dependencies
-└── README.md                            # This file
+```
+gitlab-analysis/
+├── gitlab_analysis.py                    # 🎯 Main unified entry point
+├── scripts/                              # 🛠️ Individual tool scripts
+│   ├── analyze_local_repos.py            #   📊 Repository analysis
+│   ├── export_recent_issues.py           #   📄 Markdown issue export
+│   ├── export_recent_issues_csv.py       #   📊 CSV issue export
+│   ├── export_issues_for_jira.py         #   🎫 Jira import format
+│   ├── list_registry_packages.py         #   📦 Package registry analysis
+│   └── check_project_access.py           #   🔒 Access verification
+├── src/                                  # 📚 Shared utilities
+│   ├── __init__.py
+│   └── gitlab_utils.py                   #   🔧 Common GitLab utilities
+├── config/                               # ⚙️ Configuration files
+│   ├── env.template                      #   📝 Environment template
+│   ├── settings.py                       #   ⚙️ Configuration management
+│   └── README.md                         #   📖 Config documentation
+├── docs/                                 # 📖 Documentation
+│   ├── README.md                         #   📚 Documentation index
+│   ├── CONTRIBUTING.md                   #   🤝 Contribution guidelines
+│   ├── gitlab_jira_export.md            #   🎫 Jira export guide
+│   └── gitlab_registry_packages.md      #   📦 Package registry guide
+├── gitlab_reports/                       # 📊 Analysis & issue export outputs
+│   ├── analysis_YYYYMMDD_HHMMSS/        #   📈 Repository analysis
+│   ├── issues_export_YYYYMMDD_HHMMSS/   #   📄 Markdown exports
+│   ├── issues_csv_YYYYMMDD_HHMMSS/      #   📊 CSV exports
+│   └── jira_YYYYMMDD_HHMMSS/            #   🎫 Jira import files
+├── gitlab_packages_report/               # 📦 Package registry outputs
+│   └── packages_report_YYYYMMDD_HHMMSS/ #   📦 Package listings & metadata
+├── projects/                             # 📂 Cloned GitLab repositories
+├── requirements.txt                      # 📋 Python dependencies
+└── .env                                 # 🔐 Environment configuration
 ```
 
-## Setup
+## 🛠️ Setup
 
 ### Prerequisites
+- **Python 3.8+**
+- **Git**
+- **GitLab Personal Access Token**
 
-- Python 3.8 or higher
-- Git
-- GitLab Personal Access Token
+### Quick Setup
 
-### Installation
-
-1. **Clone the repository** `bash   git clone git@github.com:pouladzade/gitlab-analysis.git   cd gitlab-analysis   `
-
-2. **Create virtual environment**
-
+1. **Clone & Setup Environment**
    ```bash
+   git clone <your-repo-url>
+   cd gitlab-analysis
+   
+   # Create virtual environment
    python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-
-   ```bash
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
+   
+   # Install dependencies
    pip install -r requirements.txt
    ```
 
-4. **Configure GitLab access** `bash   # Copy configuration template   cp config/env.template .env      # Edit .env file with your GitLab credentials   # Set GITLAB_URL and GITLAB_TOKEN   `
-
-   **To generate a GitLab Personal Access Token:**
-
-   - Go to GitLab → Profile → Access Tokens → Personal Access Tokens
-   - Required scopes: `api`, `read_repository`
-
-5. **Clone your repositories**
-
+2. **Configure GitLab Access**
    ```bash
-   # Create projects directory
-   mkdir -p projects
-
-   # Clone your GitLab repositories into projects/
-   cd projects
-   git clone git@gitlab.example.com:group/repo1.git
-   git clone git@gitlab.example.com:group/repo2.git
-   # ... add more repositories
+   # Copy configuration template
+   cp config/env.template .env
+   
+   # Edit .env with your GitLab credentials
+   # Required: GITLAB_URL and GITLAB_TOKEN
    ```
 
-## Usage
+3. **Generate GitLab Personal Access Token**
+   - Go to: **GitLab → Profile → Access Tokens → Personal Access Tokens**
+   - **Required scopes**: `api`, `read_repository`, `read_registry`
+   - Copy token to `.env` file
 
-### Main Entry Point (Recommended)
+4. **Verify Setup**
+   ```bash
+   # Test GitLab connection
+   python gitlab_analysis.py check-access
+   ```
 
-Use the unified interface for all operations:
+## 🎯 Usage
+
+### Unified Interface (Recommended)
+
+The main entry point provides a unified interface for all tools:
 
 ```bash
-# Show help and available commands
+# Show all available commands
 python gitlab_analysis.py --help
 
-# Analyze repositories (last 30 days)
+# Repository Analysis
 python gitlab_analysis.py analyze --days 30
 
-# Export issues as Markdown
+# Issue Export
 python gitlab_analysis.py export-markdown --days 7
-
-# Export issues as CSV
 python gitlab_analysis.py export-csv --days 14
-
-# Export for Jira import
 python gitlab_analysis.py export-jira --days 60
+
+# Package Registry
+python gitlab_analysis.py list-packages --type npm --save
+python gitlab_analysis.py list-packages --format csv --save
+
+# Utility Commands
+python gitlab_analysis.py check-access
 ```
 
 ### Direct Script Usage
 
-You can also run scripts directly:
+For advanced usage, run scripts directly:
 
 ```bash
-# Repository analysispython scripts/analyze_local_repos.py --days 30
+# Repository Analysis
+python scripts/analyze_local_repos.py --days 30 --verbose
 
-# Issue exports
+# Issue Exports
 python scripts/export_recent_issues.py --days 7
-python scripts/export_recent_issues_csv.py --days 14
+python scripts/export_recent_issues_csv.py --days 14 
 python scripts/export_issues_for_jira.py --days 60
+
+# Package Registry Management
+python scripts/list_registry_packages.py --type npm --format csv --save
+python scripts/list_registry_packages.py --search "cp-" --detailed
+
+# Utilities
+python scripts/check_project_access.py
 ```
 
-## Output Structure
+## 📊 Output Structure
 
-All outputs are organized in timestamped folders under `gitlab_reports/`:
+### Repository Analysis (`gitlab_reports/analysis_YYYYMMDD_HHMMSS/`)
+```
+analysis_report_YYYYMMDD_HHMMSS.txt    # Detailed analysis report
+analysis_data_YYYYMMDD_HHMMSS.csv      # Structured data for spreadsheets
+repository_index_YYYYMMDD_HHMMSS.json  # Repository metadata
+individual_repo_reports/                # Per-repository analysis files
+```
 
-### Analysis Reports (`analysis_YYYYMMDD_HHMMSS/`)
+### Issue Exports (`gitlab_reports/`)
+```
+issues_export_YYYYMMDD_HHMMSS/          # Markdown format
+├── ProjectName_issues_YYYYMMDD.md
+└── issues_summary_YYYYMMDD.md
 
-- `analysis_report_YYYYMMDD_HHMMSS.txt` - Detailed text report
-- `analysis_data_YYYYMMDD_HHMMSS.csv` - Structured CSV data
-- Individual repository analysis files
+issues_csv_YYYYMMDD_HHMMSS/             # CSV format
+├── ProjectName_issues_YYYYMMDD.csv
+├── all_issues_consolidated_YYYYMMDD.csv
+└── csv_export_summary_YYYYMMDD.txt
 
-### Markdown Issue Export (`issues_export_YYYYMMDD_HHMMSS/`)
+jira_YYYYMMDD_HHMMSS/                   # Jira import format
+├── ProjectName_jira_import_YYYYMMDD.csv
+├── all_issues_jira_import_YYYYMMDD.csv
+└── jira_import_summary_YYYYMMDD.txt
+```
 
-- `ProjectName_issues_YYYYMMDD_HHMMSS.md` - Per-project issue files
-- `issues_summary_YYYYMMDD_HHMMSS.md` - Summary with links
+### Package Registry (`gitlab_packages_report/packages_report_YYYYMMDD_HHMMSS/`)
+```
+packages.csv                            # Complete package listing with URLs
+packages_summary.txt                    # Summary statistics
+export_summary_YYYYMMDD_HHMMSS.txt     # Export metadata and parameters
+```
 
-### CSV Issue Export (`issues_csv_YYYYMMDD_HHMMSS/`)
+## 🔧 Advanced Features
 
-- `ProjectName_issues_YYYYMMDD_HHMMSS.csv` - Per-project CSV files
-- `all_issues_consolidated_YYYYMMDD_HHMMSS.csv` - All issues combined
-- `csv_export_summary_YYYYMMDD_HHMMSS.txt` - Export summary
+### Repository Analysis
+- **Smart Author Detection**: Consolidates commits by email across multiple names
+- **Activity Heatmaps**: Identifies peak development periods and patterns
+- **File Change Tracking**: Most modified files and directory analysis
+- **Branch Coverage**: Analyzes activity across all branches simultaneously
+- **Offline Capability**: Full analysis of locally cloned repositories
 
-### Jira Import (`jira_YYYYMMDD_HHMMSS/`)
+### Issue Management
+- **Intelligent Filtering**: Recent activity detection (created/updated in timeframe)
+- **Rich Context**: Includes descriptions, comments, assignees, labels, milestones
+- **Cross-Reference Preservation**: Maintains links to original GitLab issues
+- **User Information**: Full author and assignee details for accountability
 
-- `ProjectName_jira_import_YYYYMMDD_HHMMSS.csv` - Per-project Jira files
-- `all_issues_jira_import_YYYYMMDD_HHMMSS.csv` - Consolidated Jira import
-- `jira_import_summary_YYYYMMDD_HHMMSS.txt` - Import instructions
+### Package Registry Features
+- **Direct Code Access**: URLs to view package source code and files
+- **Comprehensive Metadata**: Package sizes, file counts, creation dates, versions
+- **Multi-Registry Support**: NPM, Maven, PyPI, Helm, NuGet, Docker, and more
+- **Advanced Search**: Filter by name, project, version, or package type
+- **Export Flexibility**: Table, JSON, CSV, and summary formats
 
-## Configuration:
+### Jira Integration
+- **Smart Field Mapping**: Automatic GitLab to Jira field conversion
+- **Priority Intelligence**: Label-based priority assignment
+- **Component Detection**: Extract components from labels and repository names
+- **User Context**: Rich user information preserved in descriptions
 
-Quick Setup1. **Copy configuration template:** `bash   cp config/env.template .env   `2. **Edit `.env` file with your settings:** `env   # GitLab instance URL   GITLAB_URL=https://gitlab.ptc-telematik.de      # Personal Access Token (required)   GITLAB_TOKEN=your_token_here   `3. **Verify configuration:** `bash   python config/settings.py   `### Advanced ConfigurationThe configuration system supports many optional settings. See `config/README.md` for complete documentation.**Key optional settings:**- `DEFAULT_ANALYSIS_DAYS` - Default analysis period- `DEFAULT_AUTHORS` - Default author filter- `EXCLUDE_REPOSITORIES` - Repositories to skip- `CODE_FILE_EXTENSIONS` - File types to analyze
-
-### Command Line Options
-
-| Option     | Description                    | Default |
-| ---------- | ------------------------------ | ------- |
-| `--days N` | Number of days back to analyze | 60      |
-| `--help`   | Show help information          | -       |
-
-## Advanced Usage
-
-### Repository Analysis Features
-
-- **Email Consolidation**: Automatically groups commits by author email
-- **Activity Patterns**: Identifies peak development periods
-- **Commit Frequency**: Tracks commits per day/week/month
-- **File Change Analysis**: Most modified files and directories
-- **Offline Mode**: Enhanced support for analyzing local repositories
-  - Automatically detects and tracks active repositories
-  - Provides accurate repository inclusion summary
-  - Supports local file URLs for repository references
-  - Maintains consistent reporting between online and offline modes
-
-### Issue Export Features
-
-- **Recent Filter**: Only exports issues created/updated in specified timeframe
-- **Full Context**: Includes descriptions, comments, assignees, labels
-- **User Information**: Preserves author and assignee details
-- **Cross-References**: Maintains links to original GitLab issues
-
-### Jira Import Optimization
-
-- **Field Mapping**: Automatically maps GitLab fields to Jira equivalents
-- **User Context**: Includes full user information in descriptions
-- **Priority Mapping**: Intelligent priority assignment based on labels
-- **Component Detection**: Extracts components from labels and repository names
-
-## Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **"GitLab private token not found"**
-
-   - Ensure `.env` file exists with `GITLAB_TOKEN` set
-   - Verify token has `api` and `read_repository` scopes
-
-2. **"Projects directory not found"**
-
-   - Create `projects/` directory in project root
-   - Clone your GitLab repositories into `projects/`
-
-3. **"Could not access GitLab project"**
-
-   - Verify repository URLs in `projects/` match GitLab projects
-   - Check that your token has access to the repositories
-
-4. **Permission errors**
-   - Ensure you have write permissions in the project directory
-   - Check that `gitlab_reports/` directory can be created
+| Issue | Solution |
+|-------|----------|
+| **"GitLab private token not found"** | Ensure `.env` file exists with valid `GITLAB_TOKEN` |
+| **"403 Forbidden" errors** | Verify token has required scopes: `api`, `read_repository`, `read_registry` |
+| **"Projects directory not found"** | Create `projects/` directory or use online mode for auto-cloning |
+| **"Could not access GitLab project"** | Check repository URLs and token permissions |
+| **Package URLs empty** | Use `--save` or `--detailed` flag to enable URL generation |
 
 ### Debug Mode
 
-Add verbose output to any script:
+Enable detailed logging for any script:
 
 ```bash
-python scripts/analyze_local_repos.py --days 30 --verbose
+# Repository analysis with verbose output
+python scripts/analyze_local_repos.py --verbose --days 30
+
+# Package registry with debug information  
+python scripts/list_registry_packages.py --debug --verbose
+
+# Issue export with detailed progress
+python scripts/export_issues_for_jira.py --verbose --days 60
 ```
 
-## Contributing
+### Environment Verification
 
-1. Fork the repository at [https://github.com/pouladzade/gitlab-analysis](https://github.com/pouladzade/gitlab-analysis)2. Create a feature branch (`git checkout -b feature/amazing-feature`)3. Commit your changes (`git commit -m 'Add amazing feature'`)4. Push to the branch (`git push origin feature/amazing-feature`)5. Open a Pull Request
+```bash
+# Check GitLab connectivity
+python scripts/check_project_access.py
 
-## License
+# Verify token permissions
+python scripts/list_registry_packages.py --debug
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+# Test repository access
+python scripts/analyze_local_repos.py --list-only --verbose
+```
 
-## Version History
+## 📖 Documentation
 
-- **v1.0.0** - Initial release with organized project structure
-  - Unified entry point
-  - Organized folder structure
-  - Comprehensive documentation
-  - Timestamped output directories
+### Quick References
+- **[Package Registry Guide](docs/gitlab_registry_packages.md)** - Complete package management documentation
+- **[Jira Export Guide](docs/gitlab_jira_export.md)** - Detailed Jira integration instructions
+- **[Configuration Guide](config/README.md)** - Advanced configuration options
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - Development and contribution guidelines
 
-## Support
+### Script-Specific Documentation
+Each script includes built-in help:
+```bash
+python scripts/analyze_local_repos.py --help
+python scripts/list_registry_packages.py --help
+python scripts/export_issues_for_jira.py --help
+```
 
-For issues and questions:1. Check the troubleshooting section above2. Search existing GitHub issues at [https://github.com/pouladzade/gitlab-analysis/issues](https://github.com/pouladzade/gitlab-analysis/issues)3. Create a new issue with:
+## 🤝 Contributing
 
-- Description of the problem
-- Steps to reproduce
-- Error messages
-- Environment details (OS, Python version)
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Follow** TypeScript-strict patterns and enum usage
+4. **Test** your changes thoroughly
+5. **Commit** with descriptive messages
+6. **Push** to the branch (`git push origin feature/amazing-feature`)
+7. **Open** a Pull Request
+
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🚀 Version History
+
+- **v1.2.0** - Enhanced Package Registry with direct code URLs
+  - Package URL generation for easy code access
+  - Improved error handling and Windows compatibility
+  - Enhanced documentation and unified interface
+  
+- **v1.1.0** - Comprehensive Package Registry Analysis
+  - Multi-registry support (NPM, Maven, Helm, PyPI, etc.)
+  - Advanced filtering and search capabilities
+  - Multiple export formats with metadata
+
+- **v1.0.0** - Initial release with organized structure
+  - Unified entry point and organized folder structure
+  - Comprehensive repository analysis and issue export
+  - Timestamped output directories and documentation
+
+## 💬 Support
+
+**Need Help?**
+
+1. **Check Documentation**: Review the troubleshooting section and script-specific docs
+2. **Search Issues**: Look through existing GitHub issues
+3. **Create New Issue**: Include problem description, steps to reproduce, error messages, and environment details
 
 ---
 
-**Happy Analyzing! 🚀**
-
-# Enhanced Local Git Repository Analyzer
-
-This tool analyzes your GitLab repositories for activity and author statistics, consolidating by email and supporting robust branch and date detection.
-
-## Features
-
-- Fetches all accessible GitLab repositories (not just those you are a member of)
-- Detects activity on **all branches** (not just default)
-- Supports SSH cloning (with custom port)
-- Generates detailed reports (text and CSV) with:
-  - Active/inactive repository summary
-  - Author commit/line stats (when run in full mode)
-- Supports `--list-only` mode for fast activity checks
-- Handles merge commit exclusion, author consolidation, and more
-
-## Setup
-
-### 1. Environment Variables (.env)
-
-Create a `.env` file in your project root with:
-
-```
-GITLAB_TOKEN=your_gitlab_token_here
-GITLAB_URL=https://gitlab.ptc-telematik.de
-```
-
-- Your token must have `read_api` and `read_repository` scopes.
-
-### 2. SSH Key Setup
-
-- Add your public SSH key (e.g., `id_ed25519.pub`) to your GitLab account.
-- Ensure your private key is loaded in your SSH agent:
-  ```bash
-  ssh-add ~/.ssh/id_ed25519
-  ```
-- Test with:
-  ```bash
-  ssh -T git@gitlab.ptc-telematik.de -p 7999
-  ```
-
-### 3. Install Requirements
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-### List Only (no cloning, just activity summary)
-
-```bash
-python scripts/analyze_local_repo_enhanced.py --list-only --since 2024-04-25 --until 2024-05-25
-```
-
-### Full Online Analysis (fetch, clone/update, analyze)
-
-```bash
-python scripts/analyze_local_repo_enhanced.py --mode online --since 2024-04-25 --until 2024-05-25
-```
-
-### Offline Analysis (analyze already-cloned repos)
-
-```bash
-python scripts/analyze_local_repo_enhanced.py --mode offline --since 2024-04-25 --until 2024-05-25
-```
-
-### Verbose Output
-
-Add `--verbose` to see detailed inclusion/skipping info for each repo.
-
-## Report Interpretation
-
-- **Active repositories (included):** Repos with at least one commit in the period (on any branch)
-- **Non-active repositories (skipped):** No commits in the period
-- **SUMMARY STATISTICS:** Author/commit/line stats (only in full analysis mode)
-
-## Troubleshooting
-
-- **No repositories found:**
-  - Check your token and permissions
-  - Increase `--max-repos` if you have many projects
-- **No commits detected for a repo:**
-  - Ensure the commit is pushed and visible via the API
-  - Check the date range and timezone
-  - Some GitLab API versions may have bugs with commit listing; try updating GitLab or using local analysis
-- **No author stats:**
-  - Make sure you run in full analysis mode (not `--list-only`)
-  - Ensure repos are cloned and up to date
-
-## Example .env
-
-```
-GITLAB_TOKEN=glpat-xxxxxxxxxxxxxxxxxxxx
-GITLAB_URL=https://gitlab.ptc-telematik.de
-```
-
-## Example SSH Test
-
-```
-ssh -T git@gitlab.ptc-telematik.de -p 7999
-```
-
-## Need Help?
-
-- If you encounter issues with API access, check your token scopes and project visibility.
-- For further debugging, use `--verbose` and review the printed API calls and results.
-- If you need to analyze all branches for activity, the script already does this by default.
-
----
-
-**For more advanced usage or troubleshooting, see the comments in the script or contact your GitLab admin.**
+**Happy Analyzing! 🚀📊📦**

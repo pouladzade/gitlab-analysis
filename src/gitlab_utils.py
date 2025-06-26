@@ -11,58 +11,53 @@ import gitlab
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_path = os.path.join(project_root, '.env')
+load_dotenv(env_path)
 
 
 class GitLabConfig:
-    """Configuration management for GitLab connections."""
+    """Configuration class for GitLab settings."""
     
     def __init__(self):
-        self.gitlab_url = os.getenv('GITLAB_URL', 'https://gitlab.ptc-telematik.de')
-        self.private_token = os.getenv('GITLAB_TOKEN')
+        """Initialize GitLab configuration from environment variables."""
+        self.gitlab_url = os.getenv('GITLAB_URL')
+        self.gitlab_token = os.getenv('GITLAB_PRIVATE_TOKEN') or os.getenv('GITLAB_TOKEN')
         
-        if not self.private_token:
-            raise ValueError(
-                "GitLab private token not found. Set GITLAB_TOKEN environment variable.\n"
-                "You can generate a personal access token in GitLab:\n"
-                "  Profile → Access Tokens → Personal Access Tokens\n"
-                "  Required scopes: api, read_repository"
-            )
+        if not self.gitlab_url:
+            raise ValueError("GITLAB_URL environment variable is required. Please set it in your .env file.")
+        
+        if not self.gitlab_token:
+            raise ValueError("GITLAB_TOKEN environment variable is required. Please set it in your .env file.")
+    
+    def __str__(self):
+        return f"GitLabConfig(url={self.gitlab_url}, token_set={bool(self.gitlab_token)})"
 
 
 class GitLabClient:
-    """GitLab API client wrapper with common functionality."""
+    """GitLab API client wrapper."""
     
     def __init__(self, config: Optional[GitLabConfig] = None):
-        if config is None:
-            config = GitLabConfig()
+        """Initialize GitLab client with configuration."""
+        self.config = config or GitLabConfig()
         
-        self.config = config
-        self.gl = gitlab.Gitlab(config.gitlab_url, private_token=config.private_token)
-        self.gl.auth()
-        print(f"Successfully connected to GitLab instance: {config.gitlab_url}")
-    
-    def get_project(self, project_path: str):
-        """Get a GitLab project by its path."""
         try:
-            return self.gl.projects.get(project_path)
-        except gitlab.exceptions.GitlabGetError:
-            print(f"Could not access GitLab project: {project_path}")
-            return None
+            self.gl = gitlab.Gitlab(self.config.gitlab_url, private_token=self.config.gitlab_token)
+            self.gl.auth()
+        except Exception as e:
+            raise ConnectionError(f"Failed to connect to GitLab at {self.config.gitlab_url}: {str(e)}")
     
-    def format_user_info(self, user_dict: Dict) -> str:
-        """Format user information with name and email."""
-        if not user_dict:
-            return "Unknown"
-        
-        name = user_dict.get('name', user_dict.get('username', 'Unknown'))
-        email = user_dict.get('email', '')
-        
-        if email:
-            return f"{name} ({email})"
-        else:
-            return name
+    def get_project(self, project_id_or_path: str):
+        """Get a GitLab project by ID or path."""
+        try:
+            return self.gl.projects.get(project_id_or_path)
+        except gitlab.exceptions.GitlabGetError as e:
+            raise ValueError(f"Project '{project_id_or_path}' not found or not accessible: {str(e)}")
+    
+    def list_projects(self, **kwargs):
+        """List GitLab projects with optional filters."""
+        return self.gl.projects.list(all=True, **kwargs)
 
 
 def create_safe_filename(name: str) -> str:
@@ -81,13 +76,13 @@ def get_reports_directory() -> str:
     return os.path.join(os.getcwd(), 'gitlab_reports')
 
 
-def create_timestamped_directory(report_type: str) -> str:
-    """Create a timestamped directory for reports."""
+def create_timestamped_directory(base_path: str, prefix: str = "") -> str:
+    """Create a timestamped directory for outputs."""
     from datetime import datetime
     
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    main_dir = get_reports_directory()
-    output_dir = os.path.join(main_dir, f'{report_type}_{timestamp}')
-    os.makedirs(output_dir, exist_ok=True)
+    dir_name = f"{prefix}_{timestamp}" if prefix else timestamp
+    full_path = os.path.join(base_path, dir_name)
     
-    return output_dir 
+    os.makedirs(full_path, exist_ok=True)
+    return full_path 

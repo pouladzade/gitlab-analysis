@@ -39,10 +39,17 @@ def show_help():
     print("  export-jira       Export issues for Jira import")
     print("                    └─ Output: gitlab_reports/jira_YYYYMMDD_HHMMSS/")
     print()
+    print("Package Registry:")
+    print("  list-packages     List all packages in GitLab Package Registry")
+    print("                    └─ Output: gitlab_packages_report/packages_report_YYYYMMDD_HHMMSS/")
+    print("  check-access      Verify GitLab project access permissions")
+    print()
     print("Usage Examples:")
     print("  python gitlab_analysis.py analyze --days 30")
     print("  python gitlab_analysis.py export-csv --days 7")
     print("  python gitlab_analysis.py export-jira --days 60")
+    print("  python gitlab_analysis.py list-packages --type npm --save")
+    print("  python gitlab_analysis.py check-access")
     print()
     print("Global Options:")
     print("  --days N          Number of days back to analyze (default: 60)")
@@ -96,6 +103,8 @@ def main():
         'export-markdown': scripts_dir / 'export_recent_issues.py',
         'export-csv': scripts_dir / 'export_recent_issues_csv.py',
         'export-jira': scripts_dir / 'export_issues_for_jira.py',
+        'list-packages': scripts_dir / 'list_registry_packages.py',
+        'check-access': scripts_dir / 'check_project_access.py',
     }
     
     if args.command not in command_map:
@@ -106,7 +115,12 @@ def main():
     script_path = command_map[args.command]
     
     # Build arguments to pass to the script
-    script_args = [f'--days={args.days}']
+    script_args = []
+    
+    # Only add --days for scripts that use it
+    if args.command in ['analyze', 'export-markdown', 'export-csv', 'export-jira']:
+        script_args.append(f'--days={args.days}')
+    
     script_args.extend(unknown_args)
     
     print_banner()

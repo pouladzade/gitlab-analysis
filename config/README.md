@@ -95,7 +95,7 @@ print(f"Default analysis days: {config.default_analysis_days}")
 
 | Variable                | Description                    | Default                           | Required |
 | ----------------------- | ------------------------------ | --------------------------------- | -------- |
-| `GITLAB_URL`            | GitLab instance URL            | `https://gitlab.ptc-telematik.de` | ✓        |
+| `GITLAB_URL`            | GitLab instance URL            | `https://gitlab.example.com`      | ✓        |
 | `GITLAB_TOKEN`          | Personal access token          | -                                 | ✓        |
 | `DEFAULT_ANALYSIS_DAYS` | Default days for analysis      | `60`                              | ✗        |
 | `REPORTS_DIRECTORY`     | Output directory for reports   | `gitlab_reports`                  | ✗        |

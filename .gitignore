@@ -52,6 +52,8 @@ Thumbs.db
 
 # Project Specific
 gitlab_reports/
+gitlab_packages_report/
+gitlab_issues_last_two_months/
 projects/
 *.log
 
@@ -66,5 +68,6 @@ id_*
 /reports/
 /jira_import_csv/
 /issues_export_csv/
-
+/gitlab_issues_last_two_months/
+/gitlab_packages_report/
 # Temporary Files*.tmp*.temp.cache/# Keep setup scripts (they should be committed)!setup.sh!setup.bat

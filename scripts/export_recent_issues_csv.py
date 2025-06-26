@@ -8,20 +8,29 @@ from dotenv import load_dotenv
 from typing import Dict, List
 import argparse
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_path = os.path.join(project_root, '.env')
+load_dotenv(env_path)
 
 class GitLabIssueCSVExporter:
     def __init__(self, gitlab_url: str = None, private_token: str = None):
-        self.ssh_url = gitlab_url or 'git@gitlab.ptc-telematik.de'
-        self.api_url = 'https://gitlab.ptc-telematik.de'
+        # Use environment variables if no parameters provided
+        self.gitlab_url = gitlab_url or os.getenv('GITLAB_URL')
+        self.private_token = private_token or os.getenv('GITLAB_TOKEN')
+        
+        if not self.gitlab_url:
+            raise ValueError("GitLab URL not found. Set GITLAB_URL environment variable or provide gitlab_url parameter.")
+        
+        if not self.private_token:
+            raise ValueError("GitLab private token not found. Set GITLAB_TOKEN environment variable or provide private_token parameter.")
         
         try:
-            self.gl = gitlab.Gitlab(self.api_url, private_token=private_token)
+            self.gl = gitlab.Gitlab(self.gitlab_url, private_token=self.private_token)
             self.gl.auth()
-            print(f"Successfully connected to GitLab instance: {self.api_url}")
+            print(f"Successfully connected to GitLab instance: {self.gitlab_url}")
         except Exception as e:
-            print(f"Error connecting to GitLab instance {self.api_url}: {str(e)}")
+            print(f"Error connecting to GitLab instance {self.gitlab_url}: {str(e)}")
             raise
             
         # Create timestamped output directory for this export run
@@ -236,17 +245,8 @@ def main():
     
     args = parse_args()
     
-    gitlab_url = os.getenv('GITLAB_URL', 'git@gitlab.ptc-telematik.de')
-    private_token = os.getenv('GITLAB_TOKEN')
-    
-    if not private_token:
-        print("Error: GITLAB_TOKEN environment variable is not set")
-        print("Please set your GitLab personal access token in the .env file:")
-        print("GITLAB_TOKEN=your_personal_access_token")
-        return
-    
     try:
-        exporter = GitLabIssueCSVExporter(gitlab_url, private_token)
+        exporter = GitLabIssueCSVExporter()
     except Exception as e:
         print(f"Error initializing GitLab issue CSV exporter: {str(e)}")
         return
