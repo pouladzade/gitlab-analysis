@@ -22,6 +22,9 @@ class GitLabConfig:
     
     def __init__(self):
         """Initialize GitLab configuration from environment variables."""
+        # Force reload .env file to pick up any updates
+        load_dotenv(env_path, override=True)
+        
         self.gitlab_url = os.getenv('GITLAB_URL')
         self.gitlab_token = os.getenv('GITLAB_PRIVATE_TOKEN') or os.getenv('GITLAB_TOKEN')
         
